@@ -1,7 +1,13 @@
-import axios from 'axios';
+import axios from "axios";
 
 const OPENWEATHER_API_KEY = "f273e9ce95f51d30254d4775f42c5a72";
-const LIBRETRANSLATE_URL = "https://libretranslate.com/api/v1";
+// const LIBRETRANSLATE_URL = "https://libretranslate.com";
+// const LIBRETRANSLATE_URL = "https://translate.astian.org";
+// const LIBRETRANSLATE_URL = "https://translate.argosopentech.com";
+const LIBRETRANSLATE_URL = "https://libretranslate.de";
+
+
+
 
 // OpenWeather API
 export const weatherAPI = {
@@ -12,7 +18,7 @@ export const weatherAPI = {
       );
       return response.data;
     } catch (error) {
-      console.error('Error fetching weather data:', error);
+      console.error("Error fetching weather data:", error);
       throw error;
     }
   },
@@ -24,37 +30,84 @@ export const weatherAPI = {
       );
       return response.data;
     } catch (error) {
-      console.error('Error fetching forecast data:', error);
+      console.error("Error fetching forecast data:", error);
       throw error;
     }
-  }
+  },
 };
 
 // LibreTranslate API
 export const translateAPI = {
   getLanguages: async () => {
     try {
-      const response = await axios.get(`${LIBRETRANSLATE_URL}/languages`);
+      const response = await axios.get(`${LIBRETRANSLATE_URL}/languages`, {
+        headers: { Accept: "application/json" },
+      });
       return response.data;
     } catch (error) {
-      console.error('Error fetching languages:', error);
+      console.error("Error fetching languages:", error);
       throw error;
     }
   },
 
+  // translate: async (text: string, source: string, target: string) => {
+  //   try {
+  //     const response = await axios.post(
+  //       `${LIBRETRANSLATE_URL}/translate`,
+  //       {
+  //         q: text,
+  //         source,
+  //         target,
+  //         format: "text",
+  //       },
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Accept: "application/json",
+  //         },
+  //       }
+  //     );
+  //     return response.data.translatedText;
+  //   } catch (error) {
+  //     console.error("Error translating text:", error);
+  //     throw error;
+  //   }
+  // },
+
   translate: async (text: string, source: string, target: string) => {
     try {
-      const response = await axios.post(`${LIBRETRANSLATE_URL}/translate`, {
-        q: text,
-        source,
-        target,
-      });
+      if (!text?.trim()) {
+        throw new Error("Translation text cannot be empty.");
+      }
+      if (!target) {
+        throw new Error("Target language must be provided.");
+      }
+
+      const response = await axios.post(
+        `${LIBRETRANSLATE_URL}/translate`,
+        {
+          q: text,
+          source: source || "auto", // fallback to auto-detect
+          target,
+          format: "text",
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
       return response.data.translatedText;
     } catch (error) {
-      console.error('Error translating text:', error);
+      console.error(
+        "Error translating text:",
+        error.response?.data || error.message
+      );
       throw error;
     }
-  }
+  },
 };
 
 // Geolocation helper
@@ -62,7 +115,7 @@ export const locationAPI = {
   getCurrentPosition: (): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by this browser.'));
+        reject(new Error("Geolocation is not supported by this browser."));
         return;
       }
 
@@ -72,9 +125,9 @@ export const locationAPI = {
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 60000
+          maximumAge: 60000,
         }
       );
     });
-  }
+  },
 };

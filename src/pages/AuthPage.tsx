@@ -16,7 +16,7 @@ export const AuthPage = ({ onSuccess }: AuthPageProps) => {
         <div className="text-center mb-8">
           <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4 shadow-[var(--shadow-card)] overflow-hidden bg-transparent">
             <img
-              src="/favicon.jpeg"
+              src="/favicon.jpg"
               alt="App logo"
               className="h-20 w-20 object-contain"
             />
