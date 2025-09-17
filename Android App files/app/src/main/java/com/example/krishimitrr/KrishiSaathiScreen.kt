@@ -22,20 +22,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+// Import ChatMessage and Sender from ChatbotData.kt
+import com.example.krishimitrr.ChatMessage 
+import com.example.krishimitrr.Sender
 import com.example.krishimitrr.ui.theme.KrishiMitrrTheme
 import com.example.krishimitrr.ui.theme.PrimaryGreen
 import com.example.krishimitrr.ui.theme.WarmOffWhite
 import com.example.krishimitrr.ui.theme.DarkGrayText
 
-// Data class for chat messages
-data class ChatMessage(
-    val id: String = "msg_${System.currentTimeMillis()}_${(0..1000).random()}", // Basic unique ID
-    val text: String,
-    val sender: Sender,
-    val timestamp: Long = System.currentTimeMillis()
-)
-
-enum class Sender { USER, BOT }
+// Removed duplicate data class ChatMessage
+// Removed duplicate enum class Sender
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -43,6 +39,9 @@ fun KrishiSaathiScreen() {
     var messageInput by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    // Note: The ChatMessage in ChatbotData.kt might have different fields (e.g., no timestamp by default, has isLoading).
+    // Adjust instantiation here if needed, or modify ChatMessage in ChatbotData.kt to be more general.
+    // For now, assuming ChatMessage can be instantiated with just text and sender for this screen's logic.
     val initialMessages = listOf(
         ChatMessage(text = "Hello! I'm here to help. Ask me about crops, weather, or schemes.", sender = Sender.BOT),
         ChatMessage(text = "What to plant this season?", sender = Sender.USER),
@@ -53,6 +52,7 @@ fun KrishiSaathiScreen() {
     fun sendMessage() {
         if (messageInput.isNotBlank()) {
             messages.add(ChatMessage(text = messageInput, sender = Sender.USER))
+            // This is a placeholder bot response, actual bot logic would be different
             messages.add(ChatMessage(text = "I am processing your query: '${messageInput}'", sender = Sender.BOT))
             messageInput = ""
             keyboardController?.hide()
@@ -79,7 +79,7 @@ fun KrishiSaathiScreen() {
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                reverseLayout = false
+                reverseLayout = false // Consider true if you want new messages at the bottom and list starts from bottom
             ) {
                 items(messages, key = { it.id }) { message ->
                     ChatMessageItem(message)
@@ -138,7 +138,7 @@ fun KrishiSaathiScreen() {
 
 @Composable
 fun ChatMessageItem(message: ChatMessage) {
-    val boxAlignment = if (message.sender == Sender.USER) Alignment.CenterEnd else Alignment.CenterStart // Changed to CenterEnd/CenterStart
+    val boxAlignment = if (message.sender == Sender.USER) Alignment.CenterEnd else Alignment.CenterStart
     val backgroundColor = if (message.sender == Sender.USER) PrimaryGreen else Color.LightGray
     val textColor = if (message.sender == Sender.USER) Color.White else DarkGrayText
 
@@ -146,7 +146,7 @@ fun ChatMessageItem(message: ChatMessage) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        contentAlignment = boxAlignment // Used corrected alignment
+        contentAlignment = boxAlignment 
     ) {
         Box(
             modifier = Modifier
@@ -160,6 +160,8 @@ fun ChatMessageItem(message: ChatMessage) {
                 .background(backgroundColor)
                 .padding(12.dp)
         ) {
+            // If ChatMessage from ChatbotData.kt doesn't have a timestamp, you'd remove it here
+            // Or ensure all ChatMessage objects have consistent fields.
             Text(
                 text = message.text,
                 color = textColor,
