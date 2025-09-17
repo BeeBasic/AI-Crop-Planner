@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { LanguageSelectionModal } from "@/components/modals/LanguageSelectionModal";
-import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
+// import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { LocationInfo } from "@/components/dashboard/LocationInfo";
 import { CropRecommendations } from "@/components/dashboard/CropRecommendations";
 import { GovernmentSchemes } from "@/components/dashboard/GovernmentSchemes";
 import { WeatherTrendsChart } from "@/components/dashboard/WeatherTrendsChart";
-import { locationAPI } from "@/services/api";
+import { Chatbot } from "@/components/dashboard/Chatbot";
+import { locationAPI, weatherAPI, soilAPI, modelAPI } from "@/services/api";
 import { Language, CropRecommendation } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
@@ -18,14 +19,10 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-// Available languages for the demo
+// Available languages - only English and Hindi supported
 const availableLanguages: Language[] = [
   { code: "en", name: "English" },
-  { code: "es", name: "Spanish" },
-  { code: "fr", name: "French" },
   { code: "hi", name: "Hindi" },
-  { code: "zh", name: "Chinese" },
-  { code: "ar", name: "Arabic" },
 ];
 
 export const Dashboard = ({ user, onLogout }: DashboardProps) => {
@@ -41,6 +38,21 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
     longitude: number;
   } | null>(null);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [isRecoLoading, setIsRecoLoading] = useState(false);
+  const [predictedCrop, setPredictedCrop] = useState<string | null>(null);
+  const [top3, setTop3] = useState<Array<{ name: string; score: number }> | null>(null);
+  const [pricePredictions, setPricePredictions] = useState<Array<{
+    crop_name: string;
+    predicted_price_90d: number;
+    current_price: number;
+    price_change: number;
+    price_change_percent: number;
+    harvest_month: string;
+  }> | null>(null);
+  const [modelInputs, setModelInputs] = useState<{
+    soilData: { N: number; ph: number } | null;
+    weatherData: { temperature: number; humidity: number; rainfall: number } | null;
+  }>({ soilData: null, weatherData: null });
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -63,10 +75,14 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
     try {
       const position = await locationAPI.getCurrentPosition();
-      setLocation({
+      const locationData = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-      });
+      };
+      setLocation(locationData);
+      
+      // Save location to localStorage for persistence
+      localStorage.setItem('user-location', JSON.stringify(locationData));
 
       toast({
         title: "Location detected",
@@ -82,14 +98,64 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
       });
 
       // Set demo location (New York area for demo purposes)
-      setLocation({
+      const demoLocation = {
         latitude: 40.7128,
         longitude: -74.006,
-      });
+      };
+      setLocation(demoLocation);
+      localStorage.setItem('user-location', JSON.stringify(demoLocation));
     } finally {
       setIsLocationLoading(false);
     }
   };
+
+  // Fetch soil + weather + call model when location becomes available
+  useEffect(() => {
+    const fetchAndPredict = async () => {
+      if (!location) return;
+      setIsRecoLoading(true);
+      setPredictedCrop(null);
+      setTop3(null);
+      setPricePredictions(null);
+      setModelInputs({ soilData: null, weatherData: null });
+      try {
+        // SoilGrids: N and pH
+        const soil = await soilAPI.getTopsoilNandPH(location.latitude, location.longitude);
+
+        // OpenWeather: temperature, humidity, 10-day average rainfall
+        const weather = await weatherAPI.getCurrentWeather(location.latitude, location.longitude);
+        const temperature = weather?.main?.temp ?? 0;
+        const humidity = weather?.main?.humidity ?? 0;
+        const rainfall = await weatherAPI.getAverageRainfall(location.latitude, location.longitude);
+
+        const { N, ph } = soil;
+        
+        // Store model inputs for display
+        setModelInputs({
+          soilData: { N, ph },
+          weatherData: { temperature, humidity, rainfall }
+        });
+
+        const resTop = await modelAPI.predictTop3({ N, ph, temperature, humidity, rainfall });
+        setTop3(resTop.top3);
+        if (resTop.top3?.[0]?.name) setPredictedCrop(resTop.top3[0].name);
+
+        // Get price predictions for the top 3 crops
+        if (resTop.top3 && resTop.top3.length > 0) {
+          const cropNames = resTop.top3.map(crop => crop.name);
+          const priceRes = await modelAPI.predictPrices(cropNames, location.latitude, location.longitude);
+          setPricePredictions(priceRes.price_predictions);
+        }
+      } catch (err) {
+        console.error('Recommendation pipeline error:', err);
+        toast({ title: 'Recommendation failed', description: 'Could not fetch data or predict crop', variant: 'destructive' });
+      } finally {
+        setIsRecoLoading(false);
+      }
+    };
+
+    fetchAndPredict();
+  }, [location]);
 
   const handleLanguageChange = (language: Language) => {
     setCurrentLanguage(language);
@@ -101,6 +167,18 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   useEffect(() => {
+    // Load saved location from localStorage
+    const savedLocation = localStorage.getItem('user-location');
+    if (savedLocation) {
+      try {
+        const locationData = JSON.parse(savedLocation);
+        setLocation(locationData);
+      } catch (error) {
+        console.error('Error parsing saved location:', error);
+        localStorage.removeItem('user-location');
+      }
+    }
+
     // Show language modal only once per login session
     const alreadySelected = sessionStorage.getItem(
       "language-selected-this-login"
@@ -142,20 +220,31 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Weather & Location */}
-          <div className="space-y-6">
+          <div className="space-y-6 w-full">
             <LocationInfo
               location={location}
               onRequestLocation={requestLocation}
               isLoading={isLocationLoading}
+              onSetLocation={(coords) => {
+                setLocation(coords);
+                localStorage.setItem('user-location', JSON.stringify(coords));
+              }}
             />
-            <WeatherWidget location={location} />
-            {/* Fill leftover space on wide screens */}
+            {/* Weather chart */}
             <WeatherTrendsChart />
           </div>
 
           {/* Right Column - Crop Recommendations */}
-          <div>
-            <CropRecommendations onSelectCrop={handleCropSelect} />
+          <div className="space-y-8 w-full">
+            <CropRecommendations 
+              onSelectCrop={handleCropSelect} 
+              predictedCrop={predictedCrop} 
+              loading={isRecoLoading} 
+              top3={top3} 
+              pricePredictions={pricePredictions}
+            />
+            {/* Chatbot below recommendations */}
+            <Chatbot />
           </div>
         </div>
 

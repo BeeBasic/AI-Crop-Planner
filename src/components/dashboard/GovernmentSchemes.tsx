@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, FileText } from 'lucide-react';
+import { TranslatedText } from '@/components/i18n/TranslatedText';
 
 const schemes = [
   {
@@ -39,7 +40,7 @@ export const GovernmentSchemes = () => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <FileText className="h-5 w-5 text-primary" />
-          <span>Government Schemes for Farmers</span>
+          <span><TranslatedText>Government Schemes for Farmers</TranslatedText></span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -50,10 +51,10 @@ export const GovernmentSchemes = () => {
               className="flex items-center justify-between p-4 rounded-lg border border-border/50 hover:shadow-sm transition-shadow"
             >
               <div className="flex-1">
-                <h4 className="font-semibold text-foreground mb-1">{scheme.name}</h4>
-                <p className="text-sm text-muted-foreground mb-2">{scheme.description}</p>
+                <h4 className="font-semibold text-foreground mb-1"><TranslatedText>{scheme.name}</TranslatedText></h4>
+                <p className="text-sm text-muted-foreground mb-2"><TranslatedText>{scheme.description}</TranslatedText></p>
                 <span className="inline-block px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded-md">
-                  {scheme.type}
+                  <TranslatedText>{scheme.type}</TranslatedText>
                 </span>
               </div>
               <Button
@@ -63,7 +64,7 @@ export const GovernmentSchemes = () => {
                 className="ml-4"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Apply
+                <TranslatedText>Apply</TranslatedText>
               </Button>
             </div>
           ))}

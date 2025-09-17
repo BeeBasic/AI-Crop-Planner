@@ -5,6 +5,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { TranslatedText } from "@/components/i18n/TranslatedText";
 
 interface WeatherTrendsChartProps {
   data?: Array<{ day: string; temp: number; rain: number }>;
@@ -26,7 +27,7 @@ export const WeatherTrendsChart = ({
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
-        <CardTitle>Weekly Weather Trends</CardTitle>
+        <CardTitle><TranslatedText>Weekly Weather Trends</TranslatedText></CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer

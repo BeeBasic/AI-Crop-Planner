@@ -69,14 +69,17 @@ export const LanguageProvider = ({
   const translate = async (text: string) => {
     if (!text) return text;
     if (language === "en") return text;
-    if (cache[text]) return cache[text];
+    if (cache[text]) {
+      return cache[text];
+    }
     try {
       const translated = await translateAPI.translate(text, "auto", language);
       const updated = { ...cache, [text]: translated };
       setCache(updated);
       persistCache(updated);
       return translated;
-    } catch {
+    } catch (error) {
+      console.error(`Translation failed for "${text}":`, error);
       return text; // graceful fallback
     }
   };

@@ -29,38 +29,13 @@ export const LanguageSelectionModal = ({ open, onSelect }: LanguageSelectionModa
     setIsLoading(true);
     try {
       const data = await translateAPI.getLanguages();
-      // Popular languages for farmers
-      const popularLanguages = [
-        { code: 'en', name: 'English' },
-        { code: 'es', name: 'Spanish' },
-        { code: 'fr', name: 'French' },
-        { code: 'hi', name: 'Hindi' },
-        { code: 'zh', name: 'Chinese' },
-        { code: 'ar', name: 'Arabic' },
-        { code: 'pt', name: 'Portuguese' },
-        { code: 'ru', name: 'Russian' },
-        { code: 'ja', name: 'Japanese' },
-        { code: 'ko', name: 'Korean' },
-        { code: 'de', name: 'German' },
-        { code: 'it', name: 'Italian' }
-      ];
-      
-      // Filter available languages or use popular ones as fallback
-      const availableLanguages = data && data.length > 0 
-        ? data.filter((lang: any) => popularLanguages.some(pl => pl.code === lang.code))
-        : popularLanguages;
-      
-      setLanguages(availableLanguages);
+      setLanguages(data);
     } catch (error) {
       console.error('Failed to fetch languages:', error);
-      // Use fallback languages
+      // Use fallback languages - only English and Hindi
       setLanguages([
         { code: 'en', name: 'English' },
-        { code: 'es', name: 'Spanish' },
-        { code: 'fr', name: 'French' },
-        { code: 'hi', name: 'Hindi' },
-        { code: 'zh', name: 'Chinese' },
-        { code: 'ar', name: 'Arabic' }
+        { code: 'hi', name: 'Hindi' }
       ]);
       toast({
         title: "Using offline languages",
