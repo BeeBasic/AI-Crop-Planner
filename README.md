@@ -17,7 +17,7 @@ Agro-Advisor is an end-to-end web application designed to empower Indian farmers
 - **Secure Authentication**: Google Firebase ensures user and data security.  
 - **Multi-lingual Support**: Full translation into **Hindi** for accessibility.  
 
----
+--- 
 
 ## 🛠️ Tech Stack  
 | Category          | Technology |
