@@ -56,7 +56,7 @@ Agro-Advisor is an end-to-end web application designed to empower Indian farmers
 - **Fine-Tuning**: Custom dataset of farmer queries, agricultural FAQs, and scheme info  
 - **Purpose**: Conversational, context-aware support in **multiple languages**  
 
----
+--
 
 ## 🚀 Setup and Installation  
 
