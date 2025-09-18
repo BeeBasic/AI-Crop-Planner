@@ -4,6 +4,9 @@ Agro-Advisor is an end-to-end web application designed to empower Indian farmers
 
 ---
 
+<p align="center">
+  <img src="https://github.com/BeeBasic/AI-Crop-Planner/blob/9b8aeb47218fa0d4ba799cf776fe9f63e4b91729/demo%20-%20app/Android%20App%20ScreenShots/anim.gif" alt="demo" />
+</p>
 ## ✨ Key Features  
 - **AI-Driven Crop Suitability**: XGBoost model analyzes hyperlocal soil & weather data to recommend the **top 3 most suitable crops** with confidence scores.  
 - **90-Day Price Forecasting**: CatBoost time-series model predicts **market prices 90 days ahead**, enabling farmers to choose the most profitable crop.  
