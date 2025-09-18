@@ -1,4 +1,10 @@
+setuptools>=65
+wheel
+
+
 # Core Flask Dependencies
+
+
 flask==2.3.3
 flask-cors==4.0.0
 
