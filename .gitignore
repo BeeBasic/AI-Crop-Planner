@@ -294,7 +294,7 @@ dmypy.json
 *.csv
 *.xlsx
 *.xls
-data/
+# data/
 datasets/
 
 # API Keys and Secrets
