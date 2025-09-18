@@ -13,7 +13,9 @@ interface Message {
   timestamp: Date;
 }
 
-const CHAT_API_URL = "http://localhost:5001/chat";
+import { config } from "@/config/env";
+
+const CHAT_API_URL = config.CHAT_API_URL;
 
 export const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([

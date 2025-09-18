@@ -3,6 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { LanguageSelectionModal } from "@/components/modals/LanguageSelectionModal";
 // import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { LocationInfo } from "@/components/dashboard/LocationInfo";
+import { WeatherSoilInfoDialog } from "@/components/dashboard/WeatherSoilInfoDialog";
 import { CropRecommendations } from "@/components/dashboard/CropRecommendations";
 import { GovernmentSchemes } from "@/components/dashboard/GovernmentSchemes";
 import { WeatherTrendsChart } from "@/components/dashboard/WeatherTrendsChart";
@@ -40,7 +41,10 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [isRecoLoading, setIsRecoLoading] = useState(false);
   const [predictedCrop, setPredictedCrop] = useState<string | null>(null);
-  const [top3, setTop3] = useState<Array<{ name: string; score: number }> | null>(null);
+  const [top3, setTop3] = useState<Array<{
+    name: string;
+    score: number;
+  }> | null>(null);
   const [pricePredictions, setPricePredictions] = useState<Array<{
     crop_name: string;
     predicted_price_90d: number;
@@ -51,7 +55,11 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
   }> | null>(null);
   const [modelInputs, setModelInputs] = useState<{
     soilData: { N: number; ph: number } | null;
-    weatherData: { temperature: number; humidity: number; rainfall: number } | null;
+    weatherData: {
+      temperature: number;
+      humidity: number;
+      rainfall: number;
+    } | null;
   }>({ soilData: null, weatherData: null });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -80,9 +88,9 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
         longitude: position.coords.longitude,
       };
       setLocation(locationData);
-      
+
       // Save location to localStorage for persistence
-      localStorage.setItem('user-location', JSON.stringify(locationData));
+      localStorage.setItem("user-location", JSON.stringify(locationData));
 
       toast({
         title: "Location detected",
@@ -103,7 +111,7 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
         longitude: -74.006,
       };
       setLocation(demoLocation);
-      localStorage.setItem('user-location', JSON.stringify(demoLocation));
+      localStorage.setItem("user-location", JSON.stringify(demoLocation));
     } finally {
       setIsLocationLoading(false);
     }
@@ -120,35 +128,58 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
       setModelInputs({ soilData: null, weatherData: null });
       try {
         // SoilGrids: N and pH
-        const soil = await soilAPI.getTopsoilNandPH(location.latitude, location.longitude);
+        const soil = await soilAPI.getTopsoilNandPH(
+          location.latitude,
+          location.longitude
+        );
 
         // OpenWeather: temperature, humidity, 10-day average rainfall
-        const weather = await weatherAPI.getCurrentWeather(location.latitude, location.longitude);
+        const weather = await weatherAPI.getCurrentWeather(
+          location.latitude,
+          location.longitude
+        );
         const temperature = weather?.main?.temp ?? 0;
         const humidity = weather?.main?.humidity ?? 0;
-        const rainfall = await weatherAPI.getAverageRainfall(location.latitude, location.longitude);
+        const rainfall = await weatherAPI.getAverageRainfall(
+          location.latitude,
+          location.longitude
+        );
 
         const { N, ph } = soil;
-        
+
         // Store model inputs for display
         setModelInputs({
           soilData: { N, ph },
-          weatherData: { temperature, humidity, rainfall }
+          weatherData: { temperature, humidity, rainfall },
         });
 
-        const resTop = await modelAPI.predictTop3({ N, ph, temperature, humidity, rainfall });
+        const resTop = await modelAPI.predictTop3({
+          N,
+          ph,
+          temperature,
+          humidity,
+          rainfall,
+        });
         setTop3(resTop.top3);
         if (resTop.top3?.[0]?.name) setPredictedCrop(resTop.top3[0].name);
 
         // Get price predictions for the top 3 crops
         if (resTop.top3 && resTop.top3.length > 0) {
-          const cropNames = resTop.top3.map(crop => crop.name);
-          const priceRes = await modelAPI.predictPrices(cropNames, location.latitude, location.longitude);
+          const cropNames = resTop.top3.map((crop) => crop.name);
+          const priceRes = await modelAPI.predictPrices(
+            cropNames,
+            location.latitude,
+            location.longitude
+          );
           setPricePredictions(priceRes.price_predictions);
         }
       } catch (err) {
-        console.error('Recommendation pipeline error:', err);
-        toast({ title: 'Recommendation failed', description: 'Could not fetch data or predict crop', variant: 'destructive' });
+        console.error("Recommendation pipeline error:", err);
+        toast({
+          title: "Recommendation failed",
+          description: "Could not fetch data or predict crop",
+          variant: "destructive",
+        });
       } finally {
         setIsRecoLoading(false);
       }
@@ -168,14 +199,14 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   useEffect(() => {
     // Load saved location from localStorage
-    const savedLocation = localStorage.getItem('user-location');
+    const savedLocation = localStorage.getItem("user-location");
     if (savedLocation) {
       try {
         const locationData = JSON.parse(savedLocation);
         setLocation(locationData);
       } catch (error) {
-        console.error('Error parsing saved location:', error);
-        localStorage.removeItem('user-location');
+        console.error("Error parsing saved location:", error);
+        localStorage.removeItem("user-location");
       }
     }
 
@@ -227,20 +258,22 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
               isLoading={isLocationLoading}
               onSetLocation={(coords) => {
                 setLocation(coords);
-                localStorage.setItem('user-location', JSON.stringify(coords));
+                localStorage.setItem("user-location", JSON.stringify(coords));
               }}
             />
+            {/* Weather and Soil Information Dialog */}
+            <WeatherSoilInfoDialog location={location} />
             {/* Weather chart */}
             <WeatherTrendsChart />
           </div>
 
           {/* Right Column - Crop Recommendations */}
           <div className="space-y-8 w-full">
-            <CropRecommendations 
-              onSelectCrop={handleCropSelect} 
-              predictedCrop={predictedCrop} 
-              loading={isRecoLoading} 
-              top3={top3} 
+            <CropRecommendations
+              onSelectCrop={handleCropSelect}
+              predictedCrop={predictedCrop}
+              loading={isRecoLoading}
+              top3={top3}
               pricePredictions={pricePredictions}
             />
             {/* Chatbot below recommendations */}

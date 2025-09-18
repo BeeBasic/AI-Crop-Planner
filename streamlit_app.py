@@ -1,11 +1,14 @@
 import os
 import requests
 import streamlit as st
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
 
-SOILGRIDS_BASE_URL = "https://rest.isric.org/soilgrids/v2.0/properties/query"
+SOILGRIDS_BASE_URL = os.getenv("SOILGRIDS_BASE_URL", "https://rest.isric.org/soilgrids/v2.0/properties/query")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "f273e9ce95f51d30254d4775f42c5a72")
-MODEL_PREDICT_URL = os.getenv("MODEL_PREDICT_URL", "http://127.0.0.1:5000/predict")
+MODEL_PREDICT_URL = os.getenv("MODEL_PREDICT_URL", "http://127.0.0.1:5001/predict")
 
 
 def fetch_soil_n_and_ph(lat: float, lon: float) -> tuple[float, float]:

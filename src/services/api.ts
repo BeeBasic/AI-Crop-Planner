@@ -312,13 +312,12 @@
 
 
 import axios from "axios";
+import { config } from "@/config/env";
 
-const OPENWEATHER_API_KEY = "f273e9ce95f51d30254d4775f42c5a72";
-const TRANSLATE_API_URL = "http://localhost:5001/translate";
-
-// SoilGrids API
-const SOILGRIDS_BASE_URL =
-  "https://rest.isric.org/soilgrids/v2.0/properties/query";
+// Use environment variables with fallbacks
+const OPENWEATHER_API_KEY = config.OPENWEATHER_API_KEY;
+const TRANSLATE_API_URL = config.TRANSLATE_API_URL;
+const SOILGRIDS_BASE_URL = config.SOILGRIDS_BASE_URL;
 
 
 

@@ -3,19 +3,28 @@ from flask_cors import CORS
 import joblib
 import pandas as pd
 import requests
+import os
+from dotenv import load_dotenv
 from price_prediction_service import PricePredictionService
+
+# Load environment variables
+load_dotenv()
 
 # 1. Initialize the Flask App
 app = Flask(__name__)
-# Explicit CORS config for local dev
+
+# Get CORS origins from environment variables
+cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:8080,http://127.0.0.1:8080').split(',')
+
+# Explicit CORS config
 CORS(
     app,
     resources={
-        r"/predict": {"origins": ["http://localhost:8080", "http://127.0.0.1:8080", "*"]},
-        r"/predict-top3": {"origins": ["http://localhost:8080", "http://127.0.0.1:8080", "*"]},
-        r"/predict-prices": {"origins": ["http://localhost:8080", "http://127.0.0.1:8080", "*"]},
-        r"/chat": {"origins": ["http://localhost:8080", "http://127.0.0.1:8080", "*"]},
-        r"/translate": {"origins": ["http://localhost:8080", "http://127.0.0.1:8080", "*"]},
+        r"/predict": {"origins": cors_origins + ["*"]},
+        r"/predict-top3": {"origins": cors_origins + ["*"]},
+        r"/predict-prices": {"origins": cors_origins + ["*"]},
+        r"/chat": {"origins": cors_origins + ["*"]},
+        r"/translate": {"origins": cors_origins + ["*"]},
     },
     supports_credentials=False,
 )
@@ -254,5 +263,13 @@ def translate():
 
 # 4. Run the app
 if __name__ == '__main__':
-    # The server will run on http://127.0.0.1:5001 (port 5000 is used by AirPlay on macOS)
-    app.run(debug=True, port=5001)
+    # Get configuration from environment variables
+    debug = os.getenv('DEBUG', 'true').lower() == 'true'
+    host = os.getenv('HOST', '127.0.0.1')
+    port = int(os.getenv('BACKEND_PORT', '5001'))
+    
+    print(f"Starting server on http://{host}:{port}")
+    print(f"Debug mode: {debug}")
+    
+    # The server will run on the configured host and port
+    app.run(debug=debug, host=host, port=port)
